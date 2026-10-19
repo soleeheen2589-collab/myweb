@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Krua Ton Nam, Satun – Order food</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Serif:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbf9f3;--surface:#fff;--ink:#1f2d17;--muted:#5f6b57;--green:#5d8a2b;--deep:#2f5d1e;--sage:#c2dd9a;--chili:#b3392b;--gold:#e6c35c;--line:#e3e8d6;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#12190d;--surface:#1b2614;--ink:#eef5e4;--muted:#a5b596;--green:#6f9c35;--deep:#b9dc86;--sage:#243318;--line:#2d3b22;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Noto Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Noto Sans",system-ui,sans-serif;font-weight:700;margin:0;line-height:1.2}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+header{background:var(--sage);color:var(--deep);border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header .brand{font:700 20px "Noto Serif",Georgia,serif}
+.cartbtn{background:var(--green);color:#fff;border:0;border-radius:999px;padding:9px 18px;font-weight:600}
+.hero{background:linear-gradient(var(--sage),var(--bg));color:var(--ink);padding:36px 20px 48px}
+.hero div{max-width:900px;margin:auto}
+.hero h1{font:700 clamp(32px,7vw,56px)/1.1 "Noto Serif",Georgia,serif;color:var(--deep);max-width:16ch}
+.hero p{max-width:46ch;margin:14px 0 0;color:var(--muted)}
+main{max-width:900px;margin:auto;padding:20px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
+.tabs button{white-space:nowrap;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px}
+.tabs button[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.pic{height:140px;background:var(--bg);display:grid;place-items:center;font-size:64px;position:relative}
+.pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card .body{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font-size:19px}
+.card p{margin:0;color:var(--muted);font-size:14px;flex:1}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.price{font:800 20px "Noto Sans",sans-serif}
+.add{background:var(--green);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px}
+#panel{position:fixed;inset:0 0 0 auto;width:min(420px,100%);background:var(--surface);box-shadow:-8px 0 30px #0004;transform:translateX(100%);transition:transform .25s;z-index:10;display:flex;flex-direction:column}
+#panel.open{transform:none}
+@media (prefers-reduced-motion:reduce){#panel{transition:none}}
+#panel .top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+#panel .scroll{overflow-y:auto;padding:16px 20px;flex:1}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.total{display:flex;justify-content:space-between;font:800 22px "Noto Sans",sans-serif;margin:16px 0}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:70px}
+.send{width:100%;margin-top:16px;background:var(--green);color:#fff;border:0;border-radius:10px;padding:14px;font-weight:600;font-size:17px}
+.send:disabled{opacity:.6}
+#msg{margin-top:12px;font-weight:600}
+.ok{color:#1d8a4f}.err{color:var(--chili)}
+.close{background:none;border:0;color:var(--ink);font-size:26px}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">Krua Ton Nam, Satun</span>
+  <button class="cartbtn" id="openCart">Your order (<span id="count">0</span>)</button>
+</header>
+<section class="hero"><div>
+  <h1>Thai food, cooked when you order</h1>
+  <p>Pick your dishes, tell us where to deliver, and we will confirm by email.</p>
+</div></section>
+<main>
+  <div class="tabs" id="tabs" role="group" aria-label="Menu categories"></div>
+  <div class="grid" id="menu"></div>
+</main>
+
+<aside id="panel" aria-label="Your order" aria-hidden="true">
+  <div class="top"><h2>Your order</h2><button class="close" id="closeCart" aria-label="Close">×</button></div>
+  <div class="scroll">
+    <div id="lines"></div>
+    <div class="total"><span>Total</span><span id="total">$0</span></div>
+    <form id="orderForm">
+      <label for="name">Your name</label><input id="name" name="name" required>
+      <label for="phone">Phone</label><input id="phone" name="phone" type="tel" required>
+      <label for="address">Delivery address</label><textarea id="address" name="address" required></textarea>
+      <label for="note">Note for the kitchen (optional)</label><input id="note" name="note">
+      <button class="send" id="send" type="submit">Place order</button>
+      <div id="msg" role="status"></div>
+    </form>
+  </div>
+</aside>
+
+<script>
+const ENDPOINT="https://formspree.io/f/mrpgnvyv";
+const MENU=[
+ {id:1,cat:"Rice",name:"Fried rice with shrimp",price:2,e:"🍤",img:"images/FiredRice_Shrimp.png",d:"Wok-fried jasmine rice, shrimp, egg and spring onion."},
+ {id:2,cat:"Rice",name:"Crab fried rice",price:3,e:"🦀",img:"IMG_2359.jpg",d:"Fried rice with fresh crab meat and lime on the side."},
+ {id:3,cat:"Rice",name:"Basil pork over rice",price:3,e:"🌿",d:"Minced pork, holy basil and chilli, topped with a fried egg."},
+ {id:4,cat:"Rice",name:"Green curry with rice",price:4,e:"🍛",d:"Chicken in coconut green curry with Thai aubergine."},
+ {id:5,cat:"Noodles",name:"Pad Thai",price:4,e:"🍜",d:"Rice noodles, tamarind sauce, peanuts and bean sprouts."},
+ {id:6,cat:"Noodles",name:"Small rice noodles",price:3,e:"🥢",d:"Thin rice noodles in a light pork broth."},
+ {id:7,cat:"Noodles",name:"Boat noodles",price:3,e:"🍲",d:"Rich, dark beef broth with rice noodles and meatballs."},
+ {id:8,cat:"Soup",name:"Tom Yum Kung (shrimp soup)",price:5,e:"🥘",img:"images/TomYumKung.png",d:"Hot and sour shrimp soup with lemongrass and galangal."},
+ {id:9,cat:"Soup",name:"Tom Kha Gai",price:5,e:"🥥",d:"Chicken in coconut milk soup with galangal and mushrooms."},
+ {id:10,cat:"Soup",name:"Clear pork soup",price:3,e:"🍵",d:"Mild pork and glass noodle soup with garlic."},
+ {id:11,cat:"Dessert & drinks",name:"Mango sticky rice",price:4,e:"🥭",d:"Sweet sticky rice with ripe mango and coconut cream."},
+ {id:12,cat:"Dessert & drinks",name:"Thai iced tea",price:2,e:"🧋",d:"Strong spiced tea with milk over ice."},
+ {id:13,cat:"Dessert & drinks",name:"Coconut water",price:2,e:"🥤",d:"Chilled, straight from the coconut."}
+];
+const $=s=>document.querySelector(s);
+let cart={},cat="All";
+try{cart=JSON.parse(localStorage.getItem("cart")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("cart",JSON.stringify(cart))}catch(e){}};
+const cats=["All",...new Set(MENU.map(m=>m.cat))];
+
+function renderTabs(){
+  $("#tabs").innerHTML=cats.map(c=>`<button aria-pressed="${c===cat}" data-c="${c}">${c}</button>`).join("");
+}
+function renderMenu(){
+  $("#menu").innerHTML=MENU.filter(m=>cat==="All"||m.cat===cat).map(m=>`
+  <article class="card">
+    <div class="pic" aria-hidden="true">${m.e}${m.img?`<img src="${m.img}" alt="" onerror="this.remove()">`:""}</div>
+    <div class="body"><h3>${m.name}</h3><p>${m.d}</p>
+      <div class="row"><span class="price">$${m.price}</span>
+      <button class="add" data-add="${m.id}">Add to order</button></div></div>
+  </article>`).join("");
+}
+function renderCart(){
+  const ids=Object.keys(cart).filter(i=>cart[i]>0);
+  let total=0,n=0;
+  $("#lines").innerHTML=ids.length?ids.map(i=>{
+    const m=MENU.find(x=>x.id==i);total+=m.price*cart[i];n+=cart[i];
+    return `<div class="line"><span>${m.name}</span><span class="step">
+      <button data-dec="${i}" aria-label="Remove one ${m.name}">−</button><b>${cart[i]}</b>
+      <button data-add="${i}" aria-label="Add one ${m.name}">+</button></span>
+      <span>$${m.price*cart[i]}</span></div>`}).join(""):"<p>Your order is empty. Add a dish from the menu.</p>";
+  $("#total").textContent="$"+total;$("#count").textContent=n;
+  $("#send").disabled=!ids.length;save();
+}
+function togglePanel(open){
+  $("#panel").classList.toggle("open",open);$("#panel").setAttribute("aria-hidden",!open);
+}
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(t.dataset.c){cat=t.dataset.c;renderTabs();renderMenu()}
+  if(t.dataset.add){cart[t.dataset.add]=(cart[t.dataset.add]||0)+1;renderCart()}
+  if(t.dataset.dec){cart[t.dataset.dec]=Math.max(0,cart[t.dataset.dec]-1);renderCart()}
+});
+$("#openCart").onclick=()=>togglePanel(true);
+$("#closeCart").onclick=()=>togglePanel(false);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")togglePanel(false)});
+
+$("#orderForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const ids=Object.keys(cart).filter(i=>cart[i]>0);
+  if(!ids.length)return;
+  let total=0;
+  const lines=ids.map(i=>{const m=MENU.find(x=>x.id==i);total+=m.price*cart[i];
+    return `- ${m.name} x ${cart[i]} = $${m.price*cart[i]}`}).join("\n");
+  const f=e.target,msg=$("#msg"),btn=$("#send");
+  const body={
+    _subject:"Krua Ton Nam order from "+f.name.value,
+    name:f.name.value,phone:f.phone.value,address:f.address.value,note:f.note.value,
+    order:`Order:\n${lines}\nTotal: $${total}\n\nName: ${f.name.value}\nPhone: ${f.phone.value}\nDelivery address: ${f.address.value}\nNote: ${f.note.value||"-"}`
+  };
+  btn.disabled=true;msg.className="";msg.textContent="Sending your order…";
+  try{
+    const r=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(r.status);
+    msg.className="ok";msg.textContent="Order sent. We will contact you by phone to confirm.";
+    cart={};f.reset();renderCart();
+  }catch(err){
+    msg.className="err";msg.textContent="Could not send the order. Check your connection and try again.";
+    btn.disabled=false;
+  }
+});
+renderTabs();renderMenu();renderCart();
+</script>
+</body>
+</html>
